@@ -2,3 +2,7 @@ Flask
 openai
 python-dotenv
 gradio
+Flask
+openai
+python-dotenv
+gunicorn
