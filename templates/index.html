@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💖 Radiant: Sidra's Personal AI Helper 💖</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Modern font for the UI */
+        html { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <img src="{{ url_for('static', filename='assets/radiant_logo.png') }}" alt="Radiant Logo" class="logo">
+            <h1>Radiant: Sidra's Personal Helper</h1>
+            <p>A gift from Mohammad. Ask anything about Radiology, or upload an image!</p>
+            
+            <button id="new-chat-btn" title="Start New Chat">
+                <i class="fas fa-redo-alt"></i> 
+            </button>
+        </header>
+
+        <div class="chat-window" id="chat-window">
+            {% for user_msg, ai_res in history %}
+            <div class="message user-message">{{ user_msg | safe }}</div>
+            <div class="message ai-message">{{ ai_res | safe }}</div>
+            {% endfor %}
+            </div>
+
+        <div id="image-preview-area" class="image-preview-area" style="display: none;">
+            <img id="image-preview" src="" alt="Image Preview">
+            <span id="remove-image-btn" class="remove-image-btn">&times;</span>
+        </div>
+
+        <div class="input-area">
+            <input type="file" id="image-input" accept="image/*" style="display: none;">
+            
+            <input type="text" id="user-input" placeholder="Sidra, write your message here..." autofocus>
+            
+            <button id="image-upload-btn" class="plus-icon">
+                <i class="fas fa-plus"></i>
+            </button>
+            
+            <button id="send-btn" class="send-btn">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+        
+    </div>
+    
+    <div id="custom-modal" class="custom-modal">
+      <div class="modal-content">
+        <p id="modal-message">Are you sure you want to start a new chat? This will clear all history.</p>
+        <div class="modal-buttons">
+          <button id="modal-confirm-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">Confirm</button>
+          <button id="modal-cancel-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition-colors">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
