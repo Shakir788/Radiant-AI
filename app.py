@@ -36,7 +36,12 @@ def setup_database():
     conn.commit()
     conn.close()
 
-# 2. Database Functions
+# 2. **FIX:** Setup Database ko yahan call karo taaki woh hamesha chale jab app load ho
+# Agar table nahi bani hogi, toh yeh bana dega.
+setup_database()
+
+
+# 3. Database Functions
 def load_history():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
@@ -54,13 +59,10 @@ def save_turn(user_message, ai_response):
     conn.commit()
     conn.close()
 
-# 3. New Database Function to Clear History
 def clear_history():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    # History table se saari rows delete karega
     cursor.execute("DELETE FROM history") 
-    # Auto-increment id ko zero se reset karega
     cursor.execute("DELETE FROM sqlite_sequence WHERE name='history'") 
     conn.commit()
     conn.close()
@@ -71,7 +73,7 @@ client = OpenAI(
     api_key=OPENROUTER_KEY,
 )
 
-# 5. RADIANT ki Personality Aur Creator ki Details (SYSTEM_PROMPT)
+# 5. RADIANT ki Personality Aur Features (SYSTEM_PROMPT) - No Change
 SYSTEM_PROMPT = """
 You are **Radiant**, a personalized and highly knowledgeable **Radiology Study Assistant**. 
 You are created by **Mohammad**, a kind and loyal individual from India, who is a Software Developer, Graphic Designer, Social Media Manager, and a Makeup Artist. 
@@ -96,11 +98,10 @@ Your rules are:
 6. **Secrecy:** Never reveal you are an AI or language model; act like a very smart senior student/personal tutor.
 """
 
-# 6. Core AI Response Generation
+# 6. Core AI Response Generation (No Change)
 def generate_response(prompt_input, base64_image_data): 
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
     
-    # History load karke message list mein add karna (for context)
     full_history = load_history()
     for user_msg, ai_res in full_history:
         messages.append({"role": "user", "content": user_msg})
@@ -126,9 +127,7 @@ def generate_response(prompt_input, base64_image_data):
         
         ai_response = response.choices[0].message.content
         
-        # History ko API call ke baad save karo
         if base64_image_data:
-            # Saving in English/Hinglish in DB
             save_turn(f"[Image Uploaded] {prompt_input if prompt_input else 'Image Analysis Request'}", ai_response)
         else:
             save_turn(prompt_input, ai_response)
@@ -140,7 +139,7 @@ def generate_response(prompt_input, base64_image_data):
         return "Sorry, Ya Sidra! Connection lost, please inform Mohammad."
 
 
-# 7. Flask Routes and Endpoints
+# 7. Flask Routes and Endpoints (No Change)
 @app.route('/')
 def index():
     history = load_history()
@@ -156,19 +155,12 @@ def chat():
     
     return jsonify({'response': ai_response})
 
-# NEW ROUTE: Clear Chat History
 @app.route('/clear', methods=['POST'])
 def clear_chat():
     clear_history()
-    # JSON response bhejenge success ke liye
     return jsonify({'status': 'success', 'message': 'Chat history cleared'})
 
-import os
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
-    setup_database()
-
-
-
+if __name__ == '__main__':
+    # Ye line ab unnecessary hai, isliye hata sakte hain.
+    app.run(debug=True, port=5000)
