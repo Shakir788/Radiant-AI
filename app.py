@@ -18,7 +18,8 @@ TEMP_DIR = os.environ.get('TMPDIR', '/tmp')
 DB_NAME = os.path.join(TEMP_DIR, 'chat_history.db')
 
 # Best Vision Model for speed and accuracy
-AI_MODEL = "perplexity/llama-3.1-sonar-small-vision"
+AI_MODEL = "meta-llama/llama-3.2-vision-instruct"
+
 
 
 
