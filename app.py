@@ -79,11 +79,12 @@ def generate_response(prompt_input, base64_image_data):
     # OpenRouter API URL and Headers
     api_url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {
-        "Authorization": f"Bearer {OPENROUTER_KEY}",
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://radiant-54oy.onrender.com", # Render URL yahan use hogi
-        "X-Title": "Radiant: Sidra's Personal Helper",
-    }
+    "Authorization": f"Bearer {OPENROUTER_KEY}",
+    "Content-Type": "application/json",
+    "Referer": "https://radiant-54oy.onrender.com",  # FIXED header name
+    "X-Title": "Radiant: Sidra's Personal Helper",
+}
+
     
     # Message History Build (Same as before)
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
