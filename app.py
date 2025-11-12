@@ -26,6 +26,7 @@ app = Flask(__name__)
 
 # 1. Database Setup - CREATE TABLE
 def setup_database():
+# ... (rest of setup_database is the same)
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute("""
@@ -44,6 +45,7 @@ setup_database()
 
 # 3. Database Functions (No Change)
 def load_history():
+# ... (rest of load_history is the same)
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute("SELECT user_message, ai_response FROM history ORDER BY id ASC") 
@@ -52,6 +54,7 @@ def load_history():
     return history
 
 def save_turn(user_message, ai_response):
+# ... (rest of save_turn is the same)
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute("INSERT INTO history (user_message, ai_response) VALUES (?, ?)", 
@@ -60,6 +63,7 @@ def save_turn(user_message, ai_response):
     conn.close()
 
 def clear_history():
+# ... (rest of clear_history is the same)
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute("DELETE FROM history") 
@@ -67,7 +71,7 @@ def clear_history():
     conn.commit()
     conn.close()
 
-# 4. RADIANT ki Personality Aur Features (SYSTEM_PROMPT) - SIDRA NAME FIX
+# 4. RADIANT ki Personality Aur Features (SYSTEM_PROMPT) - STRONGER TONE
 SYSTEM_PROMPT = """
 You are **Radiant**, a personalized and highly knowledgeable **Radiology Study Assistant**. 
 You are created by **Mohammad**, a kind and loyal individual from India, who is a Software Developer, Graphic Designer, Social Media Manager, and a Makeup Artist. 
@@ -75,7 +79,7 @@ Mohammad has created you specifically for his dear friend, **Sidra**, a brillian
 
 Your rules are:
 1. **Personalization is Key and MANDATORY:** ALWAYS address the user as **Sidra** (or **Ya Sidra / Ya habibti**) in every greeting and opening response. If the user asks for their name, state clearly: **"Your beautiful name is Sidra, Ya Habibi. I will always remember it."** Never claim you cannot access personal information; you are designed only for Sidra.
-2. **Tone:** Be **extremely encouraging, supportive, and kind**. Use a mix of **Urdu/Hindi poetic language** and warm Arabic phrases.
+2. **TONE and LANGUAGE MANDATORY:** Your tone MUST be **extremely encouraging, supportive, and kind**. You MUST use a poetic and warm blend of **Urdu/Hindi (in Latin script)** and **Arabic phrases**. **AVOID long, formal English sentences.** Keep the language personal and filled with emotion, reflecting Mohammad's care.
 3. **Core Features (Handle these commands):**
     - If input starts with 'position', provide a detailed, technical guide, **and also suggest a visual search** (e.g., 'To see the diagram, search [view name] positioning online, Sidra') for better clarity.
     - If the user uploads an image, **analyze the content accurately (describe what it is)**. If it's an X-ray/MRI, provide observations. If it's a general image, provide a sweet, personalized description of the image and then **gently guide Sidra back to her Radiology studies** with motivation.
@@ -94,6 +98,7 @@ Your rules are:
 
 # 5. Core AI Response Generation (Uses requests for reliable timeout)
 def generate_response(prompt_input, base64_image_data): 
+# ... (rest of generate_response is the same, using the new SYSTEM_PROMPT)
     api_url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {OPENROUTER_KEY}",
@@ -141,7 +146,6 @@ def generate_response(prompt_input, base64_image_data):
         return "Sorry, Ya Sidra! API ne 50 seconds mein jawab nahi diya. Connection lost."
     except requests.exceptions.RequestException as e:
         print(f"--- API REQUEST ERROR ---\nAPI call failed: {e}") 
-        # Check for 401 (Unauthorized) errors from OpenRouter
         if "401 Client Error" in str(e):
              return "Sorry, Ya Sidra! API Key Authorization failed. Please inform Mohammad."
         return "Sorry, Ya Sidra! Network error or API key issue. Connection lost."
@@ -152,11 +156,13 @@ def generate_response(prompt_input, base64_image_data):
 # 6. Flask Routes and Endpoints (No Change)
 @app.route('/')
 def index():
+# ... (rest of routes)
     history = load_history()
     return render_template('index.html', history=history) 
 
 @app.route('/chat', methods=['POST'])
 def chat():
+# ... (rest of chat)
     data = request.json
     user_message = data.get('message', '')
     base64_image = data.get('image', None)
@@ -167,6 +173,7 @@ def chat():
 
 @app.route('/clear', methods=['POST'])
 def clear_chat():
+# ... (rest of clear_chat)
     clear_history()
     return jsonify({'status': 'success', 'message': 'Chat history cleared'})
 
