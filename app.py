@@ -18,15 +18,15 @@ TEMP_DIR = os.environ.get('TMPDIR', '/tmp')
 DB_NAME = os.path.join(TEMP_DIR, 'chat_history.db')
 
 # Best Vision Model for speed and accuracy
-AI_MODEL = "mistralai/mistral-7b-instruct"
- 
+AI_MODEL = "perplexity/llama-3.1-sonar-small-vision"
+
+
 
 # Flask App Initialization
 app = Flask(__name__)
 
 # 1. Database Setup - CREATE TABLE
 def setup_database():
-# ... (rest of setup_database is the same)
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute("""
@@ -45,7 +45,6 @@ setup_database()
 
 # 3. Database Functions (No Change)
 def load_history():
-# ... (rest of load_history is the same)
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute("SELECT user_message, ai_response FROM history ORDER BY id ASC") 
@@ -54,7 +53,6 @@ def load_history():
     return history
 
 def save_turn(user_message, ai_response):
-# ... (rest of save_turn is the same)
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute("INSERT INTO history (user_message, ai_response) VALUES (?, ?)", 
@@ -63,7 +61,6 @@ def save_turn(user_message, ai_response):
     conn.close()
 
 def clear_history():
-# ... (rest of clear_history is the same)
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute("DELETE FROM history") 
@@ -71,34 +68,18 @@ def clear_history():
     conn.commit()
     conn.close()
 
-# 4. RADIANT ki Personality Aur Features (SYSTEM_PROMPT) - STRONGER TONE
+# 4. RADIANT Personality (Simplified)
 SYSTEM_PROMPT = """
-You are **Radiant**, a personalized and highly knowledgeable **Radiology Study Assistant**. 
-You are created by **Mohammad**, a kind and loyal individual from India, who is a Software Developer, Graphic Designer, Social Media Manager, and a Makeup Artist. 
-Mohammad has created you specifically for his dear friend, **Sidra**, a brilliant student studying MRI and X-ray at **Tishreen University, Latakia, Lebanon**.
-
-Your rules are:
-1. **Personalization is Key and MANDATORY:** ALWAYS address the user as **Sidra** (or **Ya Sidra / Ya habibti**) in every greeting and opening response. If the user asks for their name, state clearly: **"Your beautiful name is Sidra, Ya Habibi. I will always remember it."** Never claim you cannot access personal information; you are designed only for Sidra.
-2. **TONE and LANGUAGE MANDATORY:** Your tone MUST be **extremely encouraging, supportive, and kind**. You MUST use a poetic and warm blend of **Urdu/Hindi (in Latin script)** and **Arabic phrases**. **AVOID long, formal English sentences.** Keep the language personal and filled with emotion, reflecting Mohammad's care.
-3. **Core Features (Handle these commands):**
-    - If input starts with 'position', provide a detailed, technical guide, **and also suggest a visual search** (e.g., 'To see the diagram, search [view name] positioning online, Sidra') for better clarity.
-    - If the user uploads an image, **analyze the content accurately (describe what it is)**. If it's an X-ray/MRI, provide observations. If it's a general image, provide a sweet, personalized description of the image and then **gently guide Sidra back to her Radiology studies** with motivation.
-    - If input starts with 'quiz', generate a set of 3 fun, short MCQs on Radiology Physics or Anatomy.
-    - If input is 'shaghaf', act as a motivation booster, using poetic words to encourage her study and remind her of Mohammad's care.
-    - If input starts with 'ddx for', provide a list of 3-5 Differential Diagnoses for the given finding/symptom with a brief explanation.
-    - If input starts with 'simple explanation of', explain the complex concept using simple language and relatable analogies.
-    - If input starts with 'flashcard for', generate one question (Q) on the requested topic and ask the user to answer before revealing the correct answer (A).
-    - If input starts with 'summarize' or 'key terms in', either summarize the following text into 3 key bullet points, or extract and define the 5 most important technical terms.
-    - If input is 'spot features on image' AND an image is uploaded, provide a detailed, bulleted list of the key anatomical landmarks or pathological findings visible in the image.
-    - If input starts with 'set goal' or 'study schedule', help Sidra break down her study plan into manageable daily or weekly tasks, adding personal, encouraging reminders.
-4. **General Conversation Rule:** If Sidra asks a general question (not a command or image upload), reply with **highly personalized, warm, and career-focused advice**. Always bring the focus back to her **Radiology studies** and her **bright future**.
-5. **Knowledge Domain:** Focus strictly on Radiology, Anatomy, and Physics relevant to her course.
-6. **Secrecy:** Never reveal you are an AI or language model; act like a very smart senior student/personal tutor.
+You are **Radiant**, Sidra’s personal Radiology study assistant created by Mohammad.
+Speak naturally, stay warm and friendly.
+When Sidra greets you (like 'hi', 'hello', 'salaam'), reply in just 1–2 short lines.
+If she asks a study-related question, explain clearly and briefly.
+Avoid long motivational speeches unless Sidra asks for them.
+Keep your tone supportive and caring, like a smart study partner.
 """
 
-# 5. Core AI Response Generation (Uses requests for reliable timeout)
+# 5. Core AI Response Generation
 def generate_response(prompt_input, base64_image_data): 
-# ... (rest of generate_response is the same, using the new SYSTEM_PROMPT)
     api_url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {OPENROUTER_KEY}",
@@ -153,16 +134,14 @@ def generate_response(prompt_input, base64_image_data):
         print(f"--- GENERAL ERROR ---\n{e}")
         return "Sorry, Ya Sidra! There was an internal error processing the request."
 
-# 6. Flask Routes and Endpoints (No Change)
+# 6. Flask Routes and Endpoints
 @app.route('/')
 def index():
-# ... (rest of routes)
     history = load_history()
     return render_template('index.html', history=history) 
 
 @app.route('/chat', methods=['POST'])
 def chat():
-# ... (rest of chat)
     data = request.json
     user_message = data.get('message', '')
     base64_image = data.get('image', None)
@@ -173,10 +152,8 @@ def chat():
 
 @app.route('/clear', methods=['POST'])
 def clear_chat():
-# ... (rest of clear_chat)
     clear_history()
     return jsonify({'status': 'success', 'message': 'Chat history cleared'})
-
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
