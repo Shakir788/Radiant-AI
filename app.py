@@ -19,7 +19,8 @@ TEMP_DIR = os.environ.get('TMPDIR', '/tmp')
 DB_NAME = os.path.join(TEMP_DIR, 'chat_history.db')
 
 # Best Vision Model for speed and accuracy
-AI_MODEL = "openai/gpt-4o" 
+AI_MODEL = "mistralai/mistral-7b-instruct"
+
 
 # Flask App Initialization
 app = Flask(__name__)
