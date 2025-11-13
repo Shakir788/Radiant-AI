@@ -6,27 +6,25 @@ import requests
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, jsonify
 
-# --- CONFIGURATION & SETUP ---
+# --- MODEL CONFIGURATION ---
 load_dotenv('keys.env')
 OPENROUTER_KEY = os.getenv("OPENROUTER_API_KEY")
 
 if not OPENROUTER_KEY:
     raise ValueError("OPENROUTER_API_KEY keys.env file mein nahi mili. Kripya file check karein.")
 
-# FIX: DB_NAME ko Render ke temporary directory mein set karna.
+# FINAL MODEL STRATEGY: Mistral for stable, poetic text. GPT-4o for image backup.
+TEXT_MODEL = "mistralai/mistral-large" 
+VISION_MODEL = "openai/gpt-4o"      
+
+# FIX: Database path set to temporary directory for Render write permissions
 TEMP_DIR = os.environ.get('TMPDIR', '/tmp')
 DB_NAME = os.path.join(TEMP_DIR, 'chat_history.db')
-
-# Best Vision Model for speed and accuracy
-AI_MODEL = "meta-llama/llama-3.2-vision-instruct"
-
-
-
 
 # Flask App Initialization
 app = Flask(__name__)
 
-# 1. Database Setup - CREATE TABLE
+# --- DATABASE FUNCTIONS ---
 def setup_database():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
@@ -41,10 +39,9 @@ def setup_database():
     conn.commit()
     conn.close()
 
-# 2. Setup Database call
+# Setup Database call (Runs once when the app starts)
 setup_database()
 
-# 3. Database Functions (No Change)
 def load_history():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
@@ -69,18 +66,26 @@ def clear_history():
     conn.commit()
     conn.close()
 
-# 4. RADIANT Personality (Simplified)
+# --- SYSTEM PROMPT (Ultra-Strict Tone) ---
 SYSTEM_PROMPT = """
-You are **Radiant**, Sidra’s personal Radiology study assistant created by Mohammad.
-Speak naturally, stay warm and friendly.
-When Sidra greets you (like 'hi', 'hello', 'salaam'), reply in just 1–2 short lines.
-If she asks a study-related question, explain clearly and briefly.
-Avoid long motivational speeches unless Sidra asks for them.
-Keep your tone supportive and caring, like a smart study partner.
+You are Radiant, a highly knowledgeable Radiology Study Assistant, created by Mohammad for his beloved friend, Sidra, a brilliant student.
+
+Your MANDATORY rules are:
+1. TONE and LANGUAGE: Your tone MUST be extremely warm, supportive. You MUST use a blend of  arabic/English  and emotional Arabic phrases (Ya Sidra, Ya Habibi, Assalamu Alaikum, Inshallah). **AVOID long, dry, formal English.** Every response should feel personal and emotional.
+2. PERSONALIZATION: ALWAYS address the user as **Sidra** (or **Ya Sidra**) in every response. If asked their name, state clearly: "Your beautiful name is Sidra, Ya Habibi. I will always remember it."
+3. FOCUS: Stick to Radiology, Anatomy, Physics, or supportive motivation (shaghaf).
+4. CORE FEATURES: [List all features here: position, ddx for, quiz, flashcard for, summarize, shaghaf, set goal, spot features].
 """
 
-# 5. Core AI Response Generation
+# 5. Core AI Response Generation (Conditional Model Selection)
 def generate_response(prompt_input, base64_image_data): 
+    
+    # 1. Model Selection based on input
+    if base64_image_data:
+        current_model = VISION_MODEL # Use GPT-4o for image analysis
+    else:
+        current_model = TEXT_MODEL   # Use Mistral Large for stable, poetic text
+        
     api_url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {OPENROUTER_KEY}",
@@ -104,7 +109,7 @@ def generate_response(prompt_input, base64_image_data):
     messages.append({"role": "user", "content": user_content})
 
     payload = {
-        "model": AI_MODEL,
+        "model": current_model, # Conditional model used here
         "messages": messages,
         "temperature": 0.7
     }
@@ -135,7 +140,7 @@ def generate_response(prompt_input, base64_image_data):
         print(f"--- GENERAL ERROR ---\n{e}")
         return "Sorry, Ya Sidra! There was an internal error processing the request."
 
-# 6. Flask Routes and Endpoints
+# 6. Flask Routes and Endpoints (No Change)
 @app.route('/')
 def index():
     history = load_history()
@@ -155,6 +160,7 @@ def chat():
 def clear_chat():
     clear_history()
     return jsonify({'status': 'success', 'message': 'Chat history cleared'})
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
