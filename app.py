@@ -15,7 +15,7 @@ if not OPENROUTER_KEY:
 
 # ✅ Reliable model lists
 TTEXT_MODELS = [
-   "anthropic/claude-3-haiku"
+   "mistralai/mistral-large"
 ]
 
 VISION_MODELS = [
