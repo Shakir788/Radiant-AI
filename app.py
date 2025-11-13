@@ -14,11 +14,12 @@ if not OPENROUTER_KEY:
     raise ValueError("OPENROUTER_API_KEY keys.env file mein nahi mili. Kripya file check karein.")
 
 # ✅ Reliable model lists
-TEXT_MODELS = [
+TTEXT_MODELS = [
     "google/gemini-2.0-flash-exp",
-    "anthropic/claude-3.5-sonnet",
-    "mistralai/mistral-large"
+    "mistralai/mistral-large",
+    "meta-llama/llama-3.1-8b-instruct"
 ]
+
 VISION_MODELS = [
     "openai/gpt-4o",
     "qwen/qwen2.5-vl-7b-instruct"
