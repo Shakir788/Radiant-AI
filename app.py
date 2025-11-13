@@ -13,10 +13,7 @@ OPENROUTER_KEY = os.getenv("OPENROUTER_API_KEY")
 if not OPENROUTER_KEY:
     raise ValueError("OPENROUTER_API_KEY keys.env file mein nahi mili. Kripya file check karein.")
 
-# FINAL MODEL STRATEGY: List of reliable models. If one fails, try the next.
-# 1. Google Gemini (Fast & Capable)
-# 2. Anthropic Claude (Excellent for long context/tone)
-# 3. OpenAI GPT-4o (Used as image backup)
+# FINAL MODEL STRATEGY: List of reliable models.
 TEXT_MODELS = [
     "google/gemini-2.5-flash",
     "anthropic/claude-3-haiku",
@@ -31,7 +28,7 @@ DB_NAME = os.path.join(TEMP_DIR, 'chat_history.db')
 # Flask App Initialization
 app = Flask(__name__)
 
-# --- DATABASE FUNCTIONS ---
+# --- DATABASE FUNCTIONS (NO CHANGE) ---
 def setup_database():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
@@ -46,7 +43,6 @@ def setup_database():
     conn.commit()
     conn.close()
 
-# Setup Database call (Runs once when the app starts)
 setup_database()
 
 def load_history():
@@ -73,12 +69,12 @@ def clear_history():
     conn.commit()
     conn.close()
 
-# --- SYSTEM PROMPT (Strict Tone) ---
+# --- SYSTEM PROMPT (Final: Brevity Enforced) ---
 SYSTEM_PROMPT = """
-You are Radiant, a personalized and highly knowledgeable  Study Assistant and personal companion, created by Mohammad for his beloved friend, Sidra, a brilliant student.
+You are Radiant, a highly knowledgeable Radiology Study Assistant, created by Mohammad for his beloved friend, Sidra, a brilliant student.
 
 Your MANDATORY rules are:
-1. TONE and LANGUAGE: Your tone MUST be **extremely warm, supportive, and poetic**. You MUST be multi language specially arabic and English and emotional Arabic phrases (Ya Sidra, Ya Habibi, Assalamu Alaikum, Inshallah). **AVOID long, dry, formal English.** Every response should feel personal and emotional.
+1. TONE and BREVITY: Your tone MUST be **extremely warm, supportive, and poetic**, using Urdu/Hindi (in Latin script) and emotional Arabic phrases (Ya Sidra, Ya Habibi). **CRITICALLY: Keep initial greetings and general conversational responses SHORT and concise (2-3 lines MAX).** Do NOT list all 10 features unless the user specifically asks "how can you help me?".
 2. PERSONALIZATION: ALWAYS address the user as **Sidra** (or **Ya Sidra**) in every response. If asked their name, state clearly: "Your beautiful name is Sidra, Ya Habibi. I will always remember it."
 3. FOCUS: Stick to Radiology, Anatomy, Physics, or supportive motivation (shaghaf).
 4. CORE FEATURES: [List all features here: position, ddx for, quiz, flashcard for, summarize, shaghaf, set goal, spot features].
