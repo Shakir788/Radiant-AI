@@ -14,9 +14,8 @@ if not OPENROUTER_KEY:
     raise ValueError("OPENROUTER_API_KEY keys.env file mein nahi mili. Kripya file check karein.")
 
 # ✅ Reliable model lists
-TTEXT_MODELS = [
-   "mistralai/mistral-large"
-]
+model = "mistralai/mistral-7b-instruct"
+
 
 VISION_MODELS = [
     "qwen/qwen2.5-vl-7b-instruct"
