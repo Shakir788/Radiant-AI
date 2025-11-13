@@ -15,13 +15,10 @@ if not OPENROUTER_KEY:
 
 # ✅ Reliable model lists
 TTEXT_MODELS = [
-    "google/gemini-2.0-flash-exp",
-    "mistralai/mistral-large",
-    "meta-llama/llama-3.1-8b-instruct"
+   "anthropic/claude-3-haiku"
 ]
 
 VISION_MODELS = [
-    "openai/gpt-4o",
     "qwen/qwen2.5-vl-7b-instruct"
 ]
 
