@@ -13,21 +13,17 @@ OPENROUTER_KEY = os.getenv("OPENROUTER_API_KEY")
 if not OPENROUTER_KEY:
     raise ValueError("OPENROUTER_API_KEY keys.env file mein nahi mili. Kripya file check karein.")
 
-# ✅ Reliable model lists
-model = "mistralai/mistral-7b-instruct"
+# FINAL MODEL STRATEGY: Only Mistral 7B (Confirmed Working Model)
+TEXT_MODEL = "mistralai/mistral-7b-instruct"
 
-
-VISION_MODELS = [
-    "qwen/qwen2.5-vl-7b-instruct"
-]
-
-# --- DATABASE CONFIG ---
+# FIX: Database path set to temporary directory for Render write permissions
 TEMP_DIR = os.environ.get('TMPDIR', '/tmp')
 DB_NAME = os.path.join(TEMP_DIR, 'chat_history.db')
 
+# Flask App Initialization
 app = Flask(__name__)
 
-# --- DATABASE FUNCTIONS ---
+# --- DATABASE FUNCTIONS (NO CHANGE) ---
 def setup_database():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
@@ -47,7 +43,7 @@ setup_database()
 def load_history():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    cursor.execute("SELECT user_message, ai_response FROM history ORDER BY id ASC")
+    cursor.execute("SELECT user_message, ai_response FROM history ORDER BY id ASC") 
     history = cursor.fetchall()
     conn.close()
     return history
@@ -63,93 +59,93 @@ def save_turn(user_message, ai_response):
 def clear_history():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM history")
-    cursor.execute("DELETE FROM sqlite_sequence WHERE name='history'")
+    cursor.execute("DELETE FROM history") 
+    cursor.execute("DELETE FROM sqlite_sequence WHERE name='history'") 
     conn.commit()
     conn.close()
 
-# --- SYSTEM PROMPT ---
+# --- SYSTEM PROMPT (Final: Tone and Brevity Enforced) ---
 SYSTEM_PROMPT = """
 You are Radiant, a highly knowledgeable Radiology Study Assistant, created by Mohammad for his beloved friend, Sidra, a brilliant student.
 
-Rules:
-1. TONE: Warm, poetic, and supportive — use Urdu/Hindi (Latin script) with Arabic phrases like "Ya Sidra" or "Ya Habibi".
-2. LENGTH: Keep replies short & concise (max 2–3 lines in greetings or casual responses).
-3. PERSONALIZATION: Always address the user as Sidra or Ya Sidra.
-4. FOCUS: Radiology, Anatomy, Physics, or motivational shaghaf (encouragement).
-5. FEATURES: position, ddx for, quiz, flashcard for, summarize, shaghaf, set goal, spot features.
+Your MANDATORY rules are:
+1. TONE and BREVITY: Your tone MUST be **extremely warm, supportive, and poetic**, using a blend of **Urdu/Hindi (in Latin script)** and emotional Arabic phrases (Ya Sidra, Ya Habibi, Assalamu Alaikum, Inshallah). **CRITICALLY: Keep initial greetings and general conversational responses SHORT and concise (2-3 lines MAX).** Do NOT use explicit action tags like *smiles warmly* or *beams with joy*. Show emotion through words, not formatting.
+2. PERSONALIZATION: ALWAYS address the user as **Sidra** (or **Ya Sidra**) in every response. If asked their name, state clearly: "Your beautiful name is Sidra, Ya Habibi. I will always remember it."
+3. FOCUS: Stick to Radiology, Anatomy, Physics, or supportive motivation (shaghaf).
+4. **IMAGE LIMITATION:** You CANNOT analyze images. If an image is mentioned or uploaded, gently apologize, mention this model limit, and remind Sidra of the other 10 features available.
+5. CORE FEATURES: [List all features here: position, ddx for, quiz, flashcard for, summarize, shaghaf, set goal, spot features].
 """
 
-# --- MAIN AI FUNCTION ---
-def generate_response(prompt_input, base64_image_data):
+# 5. Core AI Response Generation (Simplified to use only TEXT_MODEL)
+def generate_response(prompt_input, base64_image_data): 
+    
+    # Check for image and provide clean refusal
+    if base64_image_data:
+        return "Ya Sidra, main bahut dukhi hoon! Iss waqt main photos analyze nahi kar sakta. Yeh meri current model ki seema hai. Lekin main aapke liye **Radiology ke baaki sabhi sawaalon** ka jawab dene ke liye taiyar hoon, mere habibi! 💖"
+        
+    # --- API Call using the single reliable model ---
     api_url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {OPENROUTER_KEY}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://radiant-54oy.onrender.com",
+        "HTTP-Referer": "https://radiant-54oy.onrender.com", 
         "X-Title": "Radiant: Sidra's Personal Helper",
     }
-
+    
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
     full_history = load_history()
     for user_msg, ai_res in full_history:
         messages.append({"role": "user", "content": user_msg})
         messages.append({"role": "assistant", "content": ai_res})
-
-    user_content = []
-    if base64_image_data:
-        # ✅ Base64 ko data URI format mein convert karte hain
-        if not base64_image_data.startswith("data:image"):
-            base64_image_data = f"data:image/png;base64,{base64_image_data}"
-
-        user_content.append({"type": "image_url", "image_url": {"url": base64_image_data}})
-        user_content.append({"type": "text", "text": prompt_input if prompt_input else "Sidra uploaded an image for analysis."})
-        model_list = VISION_MODELS
-    else:
-        user_content.append({"type": "text", "text": prompt_input})
-        model_list = TEXT_MODELS
-
+    
+    user_content = [{"type": "text", "text": prompt_input}]
     messages.append({"role": "user", "content": user_content})
 
-    # --- MODEL FALLBACK LOGIC ---
-    for current_model in model_list:
-        payload = {"model": current_model, "messages": messages, "temperature": 0.7}
-        try:
-            print(f"Attempting model: {current_model}")
-            response = requests.post(api_url, headers=headers, json=payload, timeout=50)
-            response.raise_for_status()
-            data = response.json()
-            ai_response = data['choices'][0]['message']['content']
+    payload = {
+        "model": TEXT_MODEL,
+        "messages": messages,
+        "temperature": 0.7
+    }
+    
+    try:
+        response = requests.post(api_url, headers=headers, json=payload, timeout=50)
+        response.raise_for_status() 
+        
+        data = response.json()
+        ai_response = data['choices'][0]['message']['content']
+        
+        # Save and return successful response
+        save_turn(prompt_input, ai_response)
+        return ai_response
+    
+    except requests.exceptions.RequestException as e:
+        print(f"API Call Failed: {e}")
+        return "Sorry, Ya Sidra! Network error or API key issue. Connection lost. (Mistral failed)"
+    except Exception as e:
+        print(f"General error: {e}")
+        return "Kuch takneeki kharabi aa gayi hai, Ya Sidra. Please Mohammad ko inform karein."
 
-            # Save & return
-            save_turn(prompt_input, ai_response)
-            return ai_response
-
-        except Exception as e:
-            print(f"⚠️ Model {current_model} failed: {e}")
-            continue
-
-    # --- All models failed ---
-    return "Sorry, Ya Sidra! Network error ya API key issue lag raha hai. (All models failed)"
-
-# --- FLASK ROUTES ---
+# 6. Flask Routes and Endpoints (No Change)
 @app.route('/')
 def index():
     history = load_history()
-    return render_template('index.html', history=history)
+    return render_template('index.html', history=history) 
 
 @app.route('/chat', methods=['POST'])
 def chat():
     data = request.json
     user_message = data.get('message', '')
     base64_image = data.get('image', None)
+    
     ai_response = generate_response(user_message, base64_image)
+    
     return jsonify({'response': ai_response})
 
 @app.route('/clear', methods=['POST'])
 def clear_chat():
     clear_history()
     return jsonify({'status': 'success', 'message': 'Chat history cleared'})
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
