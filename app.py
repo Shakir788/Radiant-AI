@@ -15,6 +15,7 @@ if not OPENROUTER_KEY:
 
 # FINAL MODEL STRATEGY: Only Mistral 7B (Confirmed Working Model)
 TEXT_MODEL = "openai/gpt-4o-mini"
+VISION_MODEL = "google/gemini-2.0-flash-exp:free" 
 
 # FIX: Database path set to temporary directory for Render write permissions
 TEMP_DIR = os.environ.get('TMPDIR', '/tmp')
@@ -83,10 +84,13 @@ City in the syria, sidra is radiology student studying in tishrin university in 
 
 # 5. Core AI Response Generation (Simplified to use only TEXT_MODEL)
 def generate_response(prompt_input, base64_image_data): 
-    
-    # Check for image and provide clean refusal
     if base64_image_data:
-        return "Ya Sidra, main bahut dukhi hoon! Iss waqt main photos analyze nahi kar sakta. Yeh meri current model ki seema hai. Lekin main aapke liye **Radiology ke baaki sabhi sawaalon** ka jawab dene ke liye taiyar hoon, mere habibi! 💖"
+        model = VISION_MODEL
+    else:
+        model = TEXT_MODEL
+
+    if base64_image_data:
+        return "Ya Sidra 💜, I’m truly sorry! At this moment, I can’t analyze the photo. Inshallah, this will be fixed soon, habibti!"
         
     # --- API Call using the single reliable model ---
     api_url = "https://openrouter.ai/api/v1/chat/completions"
